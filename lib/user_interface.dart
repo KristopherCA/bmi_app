@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'calculations.dart';
 
+class AlwaysDisabledFocusNode extends FocusNode {
+  @override
+  bool get hasFocus => false;
+}
+
 class UserInterface extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
@@ -13,9 +18,13 @@ class UserInterfaceState extends State<UserInterface> {
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _heightController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
+  final TextEditingController _sexController = TextEditingController();
+
   String _weight;
   String _height;
   double _result = 0.0;
+  var _dropList;
+  var _dropDown;
 
   /* Formula: weight (lb) / [height (in)]2 x 703
       Calculation: [weight (lb) / height (in) / height (in)] x 703
@@ -27,10 +36,34 @@ class UserInterfaceState extends State<UserInterface> {
       _weightController.clear();
       _heightController.clear();
       _ageController.clear();
+      _sexController.clear();
       _result = 0.0;
+      _dropList = null;
 
       FocusScope.of(context).requestFocus(new FocusNode());
     });
+  }
+
+  @override
+  void initState() {
+      _dropDown = ButtonTheme(
+        child: DropdownButton<String>(
+          isDense: true,
+          iconSize: 30.0,
+          items: <String>['Male', 'Female'].map((String value) {
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Text(value),
+            );
+          }).toList(growable: false),
+          onChanged: (value) {
+            _dropList = value;
+            setState(() {});
+          },
+        ),
+      );
+
+    super.initState();
   }
 
   void _displayBMI(String weight, String height, int multiplier) {
@@ -44,7 +77,7 @@ class UserInterfaceState extends State<UserInterface> {
 
       if (_result <= 18.5) {
         final _snackBar = SnackBar(
-          content: Text('You are Underweight'),
+          content: Text('You are underweight'),
           backgroundColor: Colors.grey.shade200,
           duration: Duration(seconds: 5),
           action: SnackBarAction(
@@ -58,7 +91,7 @@ class UserInterfaceState extends State<UserInterface> {
 
       if (_result > 18.5 && _result <= 24.5) {
         final _snackBar = SnackBar(
-          content: Text('You are a Normalweight'),
+          content: Text('You are a normal weight'),
           backgroundColor: Colors.pink,
           duration: Duration(seconds: 5),
           action: SnackBarAction(
@@ -72,7 +105,7 @@ class UserInterfaceState extends State<UserInterface> {
 
       if (_result >= 25.0 && _result <= 29.9) {
         final _snackBar = SnackBar(
-          content: Text('You are Overweight'),
+          content: Text('You are overweight'),
           backgroundColor: Colors.pink,
           duration: Duration(seconds: 5),
           action: SnackBarAction(
@@ -86,7 +119,7 @@ class UserInterfaceState extends State<UserInterface> {
 
       if (_result >= 30) {
         final _snackBar = SnackBar(
-          content: Text('You are Obese'),
+          content: Text('You are obese'),
           backgroundColor: Colors.pink,
           duration: Duration(seconds: 5),
           action: SnackBarAction(
@@ -129,31 +162,41 @@ class UserInterfaceState extends State<UserInterface> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: <Widget>[
                     TextField(
-                      style: TextStyle(fontSize: 20.0, color: Colors.black),
+                      style: TextStyle(fontSize: 19.0, color: Colors.black),
                       controller: _ageController,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
-                          labelText: "Please Enter Your age",
+                          labelText: "Please enter your age",
                           hintText: "in years",
                           icon: Icon(Icons.person_outline)),
                     ),
                     TextField(
-                      style: TextStyle(fontSize: 20.0, color: Colors.black),
+                      style: TextStyle(fontSize: 19.0, color: Colors.black),
                       controller: _heightController,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
-                          labelText: "Please Enter Your height",
+                          labelText: "Please enter your height",
                           hintText: "in inches",
                           icon: Icon(Icons.photo_size_select_actual)),
                     ),
                     TextField(
-                      style: TextStyle(fontSize: 20.0, color: Colors.black),
+                      style: TextStyle(fontSize: 19.0, color: Colors.black),
                       controller: _weightController,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
-                          labelText: "Please Enter Your weight",
+                          labelText: "Please enter your weight",
                           hintText: "in pounds",
                           icon: Icon(Icons.line_weight)),
+                    ),
+                    TextField(
+                      focusNode: AlwaysDisabledFocusNode(),
+                      style: TextStyle(fontSize: 19.0, color: Colors.black),
+                      decoration: InputDecoration(
+                          labelText: _dropList == null
+                              ? "Please choose your sex"
+                              : "$_dropList.",
+                          icon: Icon(Icons.people),
+                          suffixIcon: _dropDown),
                     ),
                     Padding(padding: EdgeInsets.all(4.0)),
                     Row(
@@ -205,6 +248,6 @@ class UserInterfaceState extends State<UserInterface> {
   }
 
   void _okPressed() {
-    FocusScope.of(context).requestFocus(new FocusNode());
+    FocusScope.of(context).requestFocus(FocusNode());
   }
 }

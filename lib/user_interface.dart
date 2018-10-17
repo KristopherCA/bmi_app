@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'calculations.dart';
+import 'result_screeen.dart';
 
 class AlwaysDisabledFocusNode extends FocusNode {
   @override
@@ -14,15 +14,11 @@ class UserInterface extends StatefulWidget {
 }
 
 class UserInterfaceState extends State<UserInterface> {
-  GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
   final TextEditingController _ageController = TextEditingController();
-  final TextEditingController _heightController = TextEditingController();
-  final TextEditingController _weightController = TextEditingController();
+  var heightController = TextEditingController();
+  var weightController = TextEditingController();
   final TextEditingController _sexController = TextEditingController();
 
-  String _weight;
-  String _height;
-  double _result = 0.0;
   var _dropList;
   var _dropDown;
 
@@ -31,13 +27,23 @@ class UserInterfaceState extends State<UserInterface> {
       Source:https://www.cdc.gov/nccdphp/dnpao/growthcharts/training/bmiage/page5_2.html
     */
 
+  navigate() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (context) => ResultScreen(
+                help: heightController.text,
+                hope: weightController.text,
+              )),
+    );
+  }
+
   _clear() {
     setState(() {
-      _weightController.clear();
-      _heightController.clear();
+      weightController.clear();
+      heightController.clear();
       _ageController.clear();
       _sexController.clear();
-      _result = 0.0;
       _dropList = null;
 
       FocusScope.of(context).requestFocus(new FocusNode());
@@ -46,97 +52,29 @@ class UserInterfaceState extends State<UserInterface> {
 
   @override
   void initState() {
-      _dropDown = ButtonTheme(
-        child: DropdownButton<String>(
-          isDense: true,
-          iconSize: 30.0,
-          items: <String>['Male', 'Female'].map((String value) {
-            return DropdownMenuItem<String>(
-              value: value,
-              child: Text(value),
-            );
-          }).toList(growable: false),
-          onChanged: (value) {
-            _dropList = value;
-            setState(() {});
-          },
-        ),
-      );
+    _dropDown = ButtonTheme(
+      child: DropdownButton<String>(
+        isDense: true,
+        iconSize: 30.0,
+        items: <String>['Male', 'Female'].map((String value) {
+          return DropdownMenuItem<String>(
+            value: value,
+            child: Text(value),
+          );
+        }).toList(growable: false),
+        onChanged: (value) {
+          _dropList = value;
+          setState(() {});
+        },
+      ),
+    );
 
     super.initState();
-  }
-
-  void _displayBMI(String weight, String height, int multiplier) {
-    setState(() {
-      height = _heightController.text;
-      weight = _weightController.text;
-
-      _result = calculateBMI(height, weight, multiplier);
-
-      FocusScope.of(context).requestFocus(new FocusNode());
-
-      if (_result <= 18.5) {
-        final _snackBar = SnackBar(
-          content: Text('You are underweight'),
-          backgroundColor: Colors.grey.shade200,
-          duration: Duration(seconds: 5),
-          action: SnackBarAction(
-            label: 'OK',
-            onPressed: _okPressed,
-          ),
-        );
-
-        _scaffoldKey.currentState.showSnackBar(_snackBar);
-      }
-
-      if (_result > 18.5 && _result <= 24.5) {
-        final _snackBar = SnackBar(
-          content: Text('You are a normal weight'),
-          backgroundColor: Colors.pink,
-          duration: Duration(seconds: 5),
-          action: SnackBarAction(
-            label: 'OK',
-            onPressed: _okPressed,
-          ),
-        );
-
-        _scaffoldKey.currentState.showSnackBar(_snackBar);
-      }
-
-      if (_result >= 25.0 && _result <= 29.9) {
-        final _snackBar = SnackBar(
-          content: Text('You are overweight'),
-          backgroundColor: Colors.pink,
-          duration: Duration(seconds: 5),
-          action: SnackBarAction(
-            label: 'OK',
-            onPressed: _okPressed,
-          ),
-        );
-
-        _scaffoldKey.currentState.showSnackBar(_snackBar);
-      }
-
-      if (_result >= 30) {
-        final _snackBar = SnackBar(
-          content: Text('You are obese'),
-          backgroundColor: Colors.pink,
-          duration: Duration(seconds: 5),
-          action: SnackBarAction(
-            label: 'OK',
-            onPressed: _okPressed,
-          ),
-        );
-
-        _scaffoldKey.currentState.showSnackBar(_snackBar);
-      }
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
       appBar: AppBar(
           title: Text("BMI Calculator"),
           centerTitle: true,
@@ -172,7 +110,7 @@ class UserInterfaceState extends State<UserInterface> {
                     ),
                     TextField(
                       style: TextStyle(fontSize: 19.0, color: Colors.black),
-                      controller: _heightController,
+                      controller: heightController,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                           labelText: "Please enter your height",
@@ -181,7 +119,7 @@ class UserInterfaceState extends State<UserInterface> {
                     ),
                     TextField(
                       style: TextStyle(fontSize: 19.0, color: Colors.black),
-                      controller: _weightController,
+                      controller: weightController,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                           labelText: "Please enter your weight",
@@ -208,7 +146,7 @@ class UserInterfaceState extends State<UserInterface> {
                           splashColor: Colors.deepPurpleAccent,
                           highlightColor: Colors.pinkAccent,
                           elevation: 3.0,
-                          onPressed: () => _displayBMI(_weight, _height, 703),
+                          onPressed: navigate,
                           child: Text("Calculate"),
                         ),
                         RaisedButton(
@@ -224,30 +162,9 @@ class UserInterfaceState extends State<UserInterface> {
                     )
                   ]),
             ),
-            Padding(padding: EdgeInsets.all(30.0)),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                Text(
-                  _result > 0
-                      ? "Your BMI is: ${_result.toStringAsFixed((1))}"
-                      : "",
-                  style: TextStyle(
-                    color: Colors.purple,
-                    fontSize: 30.0,
-                    fontWeight: FontWeight.w500,
-                  ),
-                )
-              ],
-            )
           ],
         ),
       ),
     );
-  }
-
-  void _okPressed() {
-    FocusScope.of(context).requestFocus(FocusNode());
   }
 }
